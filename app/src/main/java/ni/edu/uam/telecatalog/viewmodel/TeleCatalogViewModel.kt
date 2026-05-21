@@ -20,8 +20,18 @@ class TeleCatalogViewModel(
 
     private fun loadData() {
         viewModelScope.launch {
-            repository.programs.collect { programs ->
-                _uiState.update { it.copy(programs = programs) }
+            // Combina los Flows en uno solo
+            repository.programs.combine(repository.channels) { programs, channels ->
+                _uiState.value = _uiState.value.copy(
+                    programs = programs,
+                    channels = channels
+                )
+            }.collect()
+        }
+
+        viewModelScope.launch {
+            repository.schedules.collect { schedules ->
+                _uiState.update { it.copy(schedules = schedules) }
             }
         }
     }
@@ -45,20 +55,42 @@ class TeleCatalogViewModel(
     }
 
     fun filterByCategory(category: Category?) {
-        _uiState.update { it.copy(selectedCategory = category) }
         viewModelScope.launch {
+            val allPrograms = repository.programs.first()
             val filtered = if (category != null) {
-                repository.getProgramsByCategory(category)
+                allPrograms.filter { it.category == category }
             } else {
-                repository.programs.value
+                allPrograms
             }
-            _uiState.update { it.copy(programs = filtered) }
+            _uiState.update {
+                it.copy(
+                    programs = filtered,
+                    selectedCategory = category
+                )
+            }
+        }
+    }
+
+    fun searchPrograms(query: String) {
+        viewModelScope.launch {
+            if (query.isBlank()) {
+                filterByCategory(_uiState.value.selectedCategory)
+            } else {
+                val allPrograms = repository.programs.first()
+                val filtered = allPrograms.filter { program ->
+                    program.title.contains(query, ignoreCase = true) ||
+                            program.description.contains(query, ignoreCase = true)
+                }
+                _uiState.update { it.copy(programs = filtered) }
+            }
         }
     }
 }
 
 data class TeleCatalogUiState(
     val programs: List<Program> = emptyList(),
+    val channels: List<Channel> = emptyList(),
+    val schedules: List<Schedule> = emptyList(),
     val selectedCategory: Category? = null,
     val isLoading: Boolean = false,
     val error: String? = null
