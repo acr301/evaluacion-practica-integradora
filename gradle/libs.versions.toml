@@ -9,9 +9,11 @@ activityCompose = "1.13.0"
 kotlin = "2.2.10"
 composeBom = "2024.09.00"
 threeten = "1.2.1"
+navigationCompose = "2.8.9"
 
 [libraries]
 threeten-abp = { group = "com.jakewharton.threetenabp", name = "threetenabp", version.ref = "threeten" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
